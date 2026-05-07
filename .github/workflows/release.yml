@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "github*"
+  workflow_dispatch: 
 
 jobs:
   macos:
@@ -126,15 +127,14 @@ jobs:
       - uses: actions/checkout@v3
       - uses: Swatinem/rust-cache@v1
 
-      - name: Build (MSVC)
-        run: cargo build --release --package hexroll3-app
+      - name: Install ARM64 Rust target
+        run: rustup target add aarch64-pc-windows-msvc
 
-      - name: Upload Windows Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build (MSVC) for ARM64
+        run: cargo build --release --package hexroll3-app --target aarch64-pc-windows-msvc
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ needs.macos.outputs.upload_url || steps.create_release.outputs.upload_url }}
-          asset_path: target/release/hexroll3-app.exe
-          asset_name: hexroll3-windows.exe
-          asset_content_type: application/octet-stream
+          name: hexroll3-windows-arm64
+          path: target/aarch64-pc-windows-msvc/release/hexroll3-app.exe
